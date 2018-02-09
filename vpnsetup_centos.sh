@@ -33,22 +33,22 @@ conf_bk() { /bin/cp -f "$1" "$1.old-$SYS_DT" 2>/dev/null; }
 bigecho() { echo; echo "## $1"; echo; }
 
 check_ip() {
-  IP_REGEX='^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
-  printf '%s' "$1" | tr -d '\n' | grep -Eq "$IP_REGEX"
+IP_REGEX='^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
+printf '%s' "$1" | tr -d '\n' | grep -Eq "$IP_REGEX"
 }
 
 vpnsetup() {
 
 if ! grep -qs -e "release 6" -e "release 7" /etc/redhat-release; then
-  exiterr "This script only supports CentOS/RHEL 6 and 7."
+exiterr "This script only supports CentOS/RHEL 6 and 7."
 fi
 
 if [ -f /proc/user_beancounters ]; then
-  exiterr "OpenVZ VPS is not supported. Try OpenVPN: github.com/Nyr/openvpn-install"
+exiterr "OpenVZ VPS is not supported. Try OpenVPN: github.com/Nyr/openvpn-install"
 fi
 
 if [ "$(id -u)" != 0 ]; then
-  exiterr "Script must be run as root. Try 'sudo sh $0'"
+exiterr "Script must be run as root. Try 'sudo sh $0'"
 fi
 
 net_iface=${VPN_NET_IFACE:-'eth0'}
@@ -57,24 +57,26 @@ def_iface="$(route 2>/dev/null | grep '^default' | grep -o '[^ ]*$')"
 
 def_iface_state=$(cat "/sys/class/net/$def_iface/operstate" 2>/dev/null)
 if [ -n "$def_iface_state" ] && [ "$def_iface_state" != "down" ]; then
-  case "$def_iface" in
-    wl*)
-      exiterr "Wireless interface '$def_iface' detected. DO NOT run this script on your PC or Mac!"
-      ;;
-  esac
-  net_iface="$def_iface"
+if ! grep -qs raspbian /etc/os-release; then
+case "$def_iface" in
+wl*)
+exiterr "Wireless interface '$def_iface' detected. DO NOT run this script on your PC or Mac!"
+;;
+esac
+fi
+net_iface="$def_iface"
 fi
 
 net_iface_state=$(cat "/sys/class/net/$net_iface/operstate" 2>/dev/null)
 if [ -z "$net_iface_state" ] || [ "$net_iface_state" = "down" ] || [ "$net_iface" = "lo" ]; then
-  printf "Error: Network interface '%s' is not available.\n" "$net_iface" >&2
-  if [ -z "$VPN_NET_IFACE" ]; then
+printf "Error: Network interface '%s' is not available.\n" "$net_iface" >&2
+if [ -z "$VPN_NET_IFACE" ]; then
 cat 1>&2 <<EOF
 Unable to detect the default network interface. Manually re-run this script with:
-  sudo VPN_NET_IFACE="your_default_interface_name" sh "$0"
+sudo VPN_NET_IFACE="your_default_interface_name" sh "$0"
 EOF
-  fi
-  exit 1
+fi
+exit 1
 fi
 
 [ -n "$YOUR_IPSEC_PSK" ] && VPN_IPSEC_PSK="$YOUR_IPSEC_PSK"
@@ -82,24 +84,24 @@ fi
 [ -n "$YOUR_PASSWORD" ] && VPN_PASSWORD="$YOUR_PASSWORD"
 
 if [ -z "$VPN_IPSEC_PSK" ] && [ -z "$VPN_USER" ] && [ -z "$VPN_PASSWORD" ]; then
-  bigecho "VPN credentials not set by user. Generating random PSK and password..."
-  VPN_IPSEC_PSK="$(LC_CTYPE=C tr -dc 'A-HJ-NPR-Za-km-z2-9' < /dev/urandom | head -c 16)"
-  VPN_USER=vpnuser
-  VPN_PASSWORD="$(LC_CTYPE=C tr -dc 'A-HJ-NPR-Za-km-z2-9' < /dev/urandom | head -c 16)"
+bigecho "VPN credentials not set by user. Generating random PSK and password..."
+VPN_IPSEC_PSK="$(LC_CTYPE=C tr -dc 'A-HJ-NPR-Za-km-z2-9' < /dev/urandom | head -c 16)"
+VPN_USER=vpnuser
+VPN_PASSWORD="$(LC_CTYPE=C tr -dc 'A-HJ-NPR-Za-km-z2-9' < /dev/urandom | head -c 16)"
 fi
 
 if [ -z "$VPN_IPSEC_PSK" ] || [ -z "$VPN_USER" ] || [ -z "$VPN_PASSWORD" ]; then
-  exiterr "All VPN credentials must be specified. Edit the script and re-enter them."
+exiterr "All VPN credentials must be specified. Edit the script and re-enter them."
 fi
 
 if printf '%s' "$VPN_IPSEC_PSK $VPN_USER $VPN_PASSWORD" | LC_ALL=C grep -q '[^ -~]\+'; then
-  exiterr "VPN credentials must not contain non-ASCII characters."
+exiterr "VPN credentials must not contain non-ASCII characters."
 fi
 
 case "$VPN_IPSEC_PSK $VPN_USER $VPN_PASSWORD" in
-  *[\\\"\']*)
-    exiterr "VPN credentials must not contain these special characters: \\ \" '"
-    ;;
+*[\\\"\']*)
+exiterr "VPN credentials must not contain these special characters: \\ \" '"
+;;
 esac
 
 bigecho "VPN setup in progress... Please be patient."
@@ -111,7 +113,7 @@ cd /opt/src || exiterr "Cannot enter /opt/src."
 bigecho "Installing packages required for setup..."
 
 yum -y install wget bind-utils openssl \
-  iproute gawk grep sed net-tools || exiterr2
+iproute gawk grep sed net-tools || exiterr2
 
 bigecho "Trying to auto discover IP of this server..."
 
@@ -138,17 +140,17 @@ yum -y install epel-release || yum -y install "$epel_url" || exiterr2
 bigecho "Installing packages required for the VPN..."
 
 yum -y install nss-devel nspr-devel pkgconfig pam-devel \
-  libcap-ng-devel libselinux-devel curl-devel \
-  flex bison gcc make ppp xl2tpd || exiterr2
+libcap-ng-devel libselinux-devel curl-devel \
+flex bison gcc make ppp xl2tpd || exiterr2
 
 OPT1='--enablerepo=*server-optional*'
 OPT2='--enablerepo=*releases-optional*'
 if grep -qs "release 6" /etc/redhat-release; then
-  yum -y remove libevent-devel
-  yum "$OPT1" "$OPT2" -y install libevent2-devel fipscheck-devel || exiterr2
+yum -y remove libevent-devel
+yum "$OPT1" "$OPT2" -y install libevent2-devel fipscheck-devel || exiterr2
 else
-  yum -y install systemd-devel iptables-services || exiterr2
-  yum "$OPT1" "$OPT2" -y install libevent-devel fipscheck-devel || exiterr2
+yum -y install systemd-devel iptables-services || exiterr2
+yum "$OPT1" "$OPT2" -y install libevent-devel fipscheck-devel || exiterr2
 fi
 
 bigecho "Installing Fail2Ban to protect SSH..."
@@ -162,12 +164,12 @@ swan_file="libreswan-$SWAN_VER.tar.gz"
 swan_url1="https://github.com/libreswan/libreswan/archive/v$SWAN_VER.tar.gz"
 swan_url2="https://download.libreswan.org/$swan_file"
 if ! { wget -t 3 -T 30 -nv -O "$swan_file" "$swan_url1" || wget -t 3 -T 30 -nv -O "$swan_file" "$swan_url2"; }; then
-  exiterr "Cannot download Libreswan source."
+exiterr "Cannot download Libreswan source."
 fi
 /bin/rm -rf "/opt/src/libreswan-$SWAN_VER"
 tar xzf "$swan_file" && /bin/rm -f "$swan_file"
 cd "libreswan-$SWAN_VER" || exiterr "Cannot enter Libreswan source dir."
-sed -i '/docker-targets\.mk/d' Makefile
+[ "$SWAN_VER" = "3.22" ] && sed -i '/^#define LSWBUF_CANARY/s/-2$/((char) -2)/' include/lswlog.h
 cat > Makefile.inc.local <<'EOF'
 WERROR_CFLAGS =
 USE_DNSSEC = false
@@ -180,7 +182,7 @@ make "-j$((NPROCS+1))" -s base && make -s install-base
 cd /opt/src || exiterr "Cannot enter /opt/src."
 /bin/rm -rf "/opt/src/libreswan-$SWAN_VER"
 if ! /usr/local/sbin/ipsec --version 2>/dev/null | grep -qF "$SWAN_VER"; then
-  exiterr "Libreswan $SWAN_VER failed to build."
+exiterr "Libreswan $SWAN_VER failed to build."
 fi
 
 bigecho "Creating VPN configuration..."
@@ -199,50 +201,51 @@ cat > /etc/ipsec.conf <<EOF
 version 2.0
 
 config setup
-  virtual-private=%v4:10.0.0.0/8,%v4:192.168.0.0/16,%v4:172.16.0.0/12,%v4:!$L2TP_NET,%v4:!$XAUTH_NET
-  protostack=netkey
-  interfaces=%defaultroute
-  uniqueids=no
+virtual-private=%v4:10.0.0.0/8,%v4:192.168.0.0/16,%v4:172.16.0.0/12,%v4:!$L2TP_NET,%v4:!$XAUTH_NET
+protostack=netkey
+interfaces=%defaultroute
+uniqueids=no
 
 conn shared
-  left=%defaultroute
-  leftid=$PUBLIC_IP
-  right=%any
-  encapsulation=yes
-  authby=secret
-  pfs=no
-  rekey=no
-  keyingtries=5
-  dpddelay=30
-  dpdtimeout=120
-  dpdaction=clear
-  ike=3des-sha1,3des-sha2,aes-sha1,aes-sha1;modp1024,aes-sha2,aes-sha2;modp1024,aes256-sha2_512
-  phase2alg=3des-sha1,3des-sha2,aes-sha1,aes-sha2,aes256-sha2_512
-  sha2-truncbug=yes
+left=%defaultroute
+leftid=$PUBLIC_IP
+right=%any
+encapsulation=yes
+authby=secret
+pfs=no
+rekey=no
+keyingtries=5
+dpddelay=30
+dpdtimeout=120
+dpdaction=clear
+ike=3des-sha1,3des-sha2,aes-sha1,aes-sha1;modp1024,aes-sha2,aes-sha2;modp1024,aes256-sha2_512
+phase2alg=3des-sha1,3des-sha2,aes-sha1,aes-sha2,aes256-sha2_512
+sha2-truncbug=yes
 
 conn l2tp-psk
-  auto=add
-  leftprotoport=17/1701
-  rightprotoport=17/%any
-  type=transport
-  phase2=esp
-  also=shared
+auto=add
+leftprotoport=17/1701
+rightprotoport=17/%any
+type=transport
+phase2=esp
+also=shared
 
 conn xauth-psk
-  auto=add
-  leftsubnet=0.0.0.0/0
-  rightaddresspool=$XAUTH_POOL
-  modecfgdns="$DNS_SRV1, $DNS_SRV2"
-  leftxauthserver=yes
-  rightxauthclient=yes
-  leftmodecfgserver=yes
-  rightmodecfgclient=yes
-  modecfgpull=yes
-  xauthby=file
-  ike-frag=yes
-  ikev2=never
-  cisco-unity=yes
-  also=shared
+auto=add
+leftsubnet=0.0.0.0/0
+rightaddresspool=$XAUTH_POOL
+modecfgdns1=$DNS_SRV1
+modecfgdns2=$DNS_SRV2
+leftxauthserver=yes
+rightxauthclient=yes
+leftmodecfgserver=yes
+rightmodecfgclient=yes
+modecfgpull=yes
+xauthby=file
+ike-frag=yes
+ikev2=never
+cisco-unity=yes
+also=shared
 EOF
 
 # Specify IPsec PSK
@@ -301,14 +304,14 @@ EOF
 bigecho "Updating sysctl settings..."
 
 if ! grep -qs "hwdsl2 VPN script" /etc/sysctl.conf; then
-  conf_bk "/etc/sysctl.conf"
-  if [ "$(getconf LONG_BIT)" = "64" ]; then
-    SHM_MAX=68719476736
-    SHM_ALL=4294967296
-  else
-    SHM_MAX=4294967295
-    SHM_ALL=268435456
-  fi
+conf_bk "/etc/sysctl.conf"
+if [ "$(getconf LONG_BIT)" = "64" ]; then
+SHM_MAX=68719476736
+SHM_ALL=4294967296
+else
+SHM_MAX=4294967295
+SHM_ALL=268435456
+fi
 cat >> /etc/sysctl.conf <<EOF
 
 # Added by hwdsl2 VPN script
@@ -342,35 +345,35 @@ bigecho "Updating IPTables rules..."
 ipt_flag=0
 IPT_FILE="/etc/sysconfig/iptables"
 if ! grep -qs "hwdsl2 VPN script" "$IPT_FILE" \
-   || ! iptables -t nat -C POSTROUTING -s "$L2TP_NET" -o "$net_iface" -j MASQUERADE 2>/dev/null \
-   || ! iptables -t nat -C POSTROUTING -s "$XAUTH_NET" -o "$net_iface" -m policy --dir out --pol none -j MASQUERADE 2>/dev/null; then
-  ipt_flag=1
+|| ! iptables -t nat -C POSTROUTING -s "$L2TP_NET" -o "$net_iface" -j MASQUERADE 2>/dev/null \
+|| ! iptables -t nat -C POSTROUTING -s "$XAUTH_NET" -o "$net_iface" -m policy --dir out --pol none -j MASQUERADE 2>/dev/null; then
+ipt_flag=1
 fi
 
 # Add IPTables rules for VPN
 if [ "$ipt_flag" = "1" ]; then
-  service fail2ban stop >/dev/null 2>&1
-  iptables-save > "$IPT_FILE.old-$SYS_DT"
-  iptables -I INPUT 1 -p udp --dport 1701 -m policy --dir in --pol none -j DROP
-  iptables -I INPUT 2 -m conntrack --ctstate INVALID -j DROP
-  iptables -I INPUT 3 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-  iptables -I INPUT 4 -p udp -m multiport --dports 500,4500 -j ACCEPT
-  iptables -I INPUT 5 -p udp --dport 1701 -m policy --dir in --pol ipsec -j ACCEPT
-  iptables -I INPUT 6 -p udp --dport 1701 -j DROP
-  iptables -I FORWARD 1 -m conntrack --ctstate INVALID -j DROP
-  iptables -I FORWARD 2 -i "$net_iface" -o ppp+ -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-  iptables -I FORWARD 3 -i ppp+ -o "$net_iface" -j ACCEPT
-  iptables -I FORWARD 4 -i ppp+ -o ppp+ -s "$L2TP_NET" -d "$L2TP_NET" -j ACCEPT
-  iptables -I FORWARD 5 -i "$net_iface" -d "$XAUTH_NET" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-  iptables -I FORWARD 6 -s "$XAUTH_NET" -o "$net_iface" -j ACCEPT
-  # Uncomment if you wish to disallow traffic between VPN clients themselves
-  # iptables -I FORWARD 2 -i ppp+ -o ppp+ -s "$L2TP_NET" -d "$L2TP_NET" -j DROP
-  # iptables -I FORWARD 3 -s "$XAUTH_NET" -d "$XAUTH_NET" -j DROP
-  iptables -A FORWARD -j DROP
-  iptables -t nat -I POSTROUTING -s "$XAUTH_NET" -o "$net_iface" -m policy --dir out --pol none -j MASQUERADE
-  iptables -t nat -I POSTROUTING -s "$L2TP_NET" -o "$net_iface" -j MASQUERADE
-  echo "# Modified by hwdsl2 VPN script" > "$IPT_FILE"
-  iptables-save >> "$IPT_FILE"
+service fail2ban stop >/dev/null 2>&1
+iptables-save > "$IPT_FILE.old-$SYS_DT"
+iptables -I INPUT 1 -p udp --dport 1701 -m policy --dir in --pol none -j DROP
+iptables -I INPUT 2 -m conntrack --ctstate INVALID -j DROP
+iptables -I INPUT 3 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+iptables -I INPUT 4 -p udp -m multiport --dports 500,4500 -j ACCEPT
+iptables -I INPUT 5 -p udp --dport 1701 -m policy --dir in --pol ipsec -j ACCEPT
+iptables -I INPUT 6 -p udp --dport 1701 -j DROP
+iptables -I FORWARD 1 -m conntrack --ctstate INVALID -j DROP
+iptables -I FORWARD 2 -i "$net_iface" -o ppp+ -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+iptables -I FORWARD 3 -i ppp+ -o "$net_iface" -j ACCEPT
+iptables -I FORWARD 4 -i ppp+ -o ppp+ -s "$L2TP_NET" -d "$L2TP_NET" -j ACCEPT
+iptables -I FORWARD 5 -i "$net_iface" -d "$XAUTH_NET" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+iptables -I FORWARD 6 -s "$XAUTH_NET" -o "$net_iface" -j ACCEPT
+# Uncomment if you wish to disallow traffic between VPN clients themselves
+# iptables -I FORWARD 2 -i ppp+ -o ppp+ -s "$L2TP_NET" -d "$L2TP_NET" -j DROP
+# iptables -I FORWARD 3 -s "$XAUTH_NET" -d "$XAUTH_NET" -j DROP
+iptables -A FORWARD -j DROP
+iptables -t nat -I POSTROUTING -s "$XAUTH_NET" -o "$net_iface" -m policy --dir out --pol none -j MASQUERADE
+iptables -t nat -I POSTROUTING -s "$L2TP_NET" -o "$net_iface" -j MASQUERADE
+echo "# Modified by hwdsl2 VPN script" > "$IPT_FILE"
+iptables-save >> "$IPT_FILE"
 fi
 
 bigecho "Creating basic Fail2Ban rules..."
@@ -388,18 +391,18 @@ fi
 bigecho "Enabling services on boot..."
 
 if grep -qs "release 6" /etc/redhat-release; then
-  chkconfig iptables on
-  chkconfig fail2ban on
+chkconfig iptables on
+chkconfig fail2ban on
 else
-  systemctl --now mask firewalld 2>/dev/null
-  systemctl enable iptables fail2ban 2>/dev/null
+systemctl --now mask firewalld 2>/dev/null
+systemctl enable iptables fail2ban 2>/dev/null
 fi
 if ! grep -qs "hwdsl2 VPN script" /etc/rc.local; then
-  if [ -f /etc/rc.local ]; then
-    conf_bk "/etc/rc.local"
-  else
-    echo '#!/bin/sh' > /etc/rc.local
-  fi
+if [ -f /etc/rc.local ]; then
+conf_bk "/etc/rc.local"
+else
+echo '#!/bin/sh' > /etc/rc.local
+fi
 cat >> /etc/rc.local <<'EOF'
 
 # Added by hwdsl2 VPN script
@@ -430,10 +433,10 @@ iptables-restore < "$IPT_FILE"
 
 # Fix xl2tpd on CentOS 7, if kernel module "l2tp_ppp" is unavailable
 if grep -qs "release 7" /etc/redhat-release; then
-  if ! modprobe -q l2tp_ppp; then
-    sed -i '/^ExecStartPre/s/^/#/' /usr/lib/systemd/system/xl2tpd.service
-    systemctl daemon-reload
-  fi
+if ! modprobe -q l2tp_ppp; then
+sed -i '/^ExecStartPre/s/^/#/' /usr/lib/systemd/system/xl2tpd.service
+systemctl daemon-reload
+fi
 fi
 
 # Restart services
