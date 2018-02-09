@@ -77,6 +77,10 @@ EOF
   exit 1
 fi
 
+yum remove -y epel-release
+yum clean all
+yum install -y epel-release
+
 [ -n "$YOUR_IPSEC_PSK" ] && VPN_IPSEC_PSK="$YOUR_IPSEC_PSK"
 [ -n "$YOUR_USERNAME" ] && VPN_USER="$YOUR_USERNAME"
 [ -n "$YOUR_PASSWORD" ] && VPN_PASSWORD="$YOUR_PASSWORD"
@@ -465,6 +469,8 @@ Write these down. You'll need them to connect!
 ================================================
 
 EOF
+
+rm -fr ./vpnsetup_centos.sh
 
 }
 
