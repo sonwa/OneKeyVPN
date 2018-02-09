@@ -451,7 +451,7 @@ service fail2ban restart 2>/dev/null
 service ipsec restart 2>/dev/null
 service xl2tpd restart 2>/dev/null
 
-/bin/rm -rf "/opt/src/vpnsetu*"
+/bin/rm -rf /opt/src/vpnsetu*
 
 cat <<EOF
 
