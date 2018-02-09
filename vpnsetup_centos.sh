@@ -451,6 +451,8 @@ service fail2ban restart 2>/dev/null
 service ipsec restart 2>/dev/null
 service xl2tpd restart 2>/dev/null
 
+/bin/rm -rf "/opt/src/vpnsetup_centos.sh"
+
 cat <<EOF
 
 ================================================
@@ -469,9 +471,6 @@ Write these down. You'll need them to connect!
 ================================================
 
 EOF
-
-rm -fr ./vpnsetup_centos.sh
-
 }
 
 ## Defer setup until we have the complete script
