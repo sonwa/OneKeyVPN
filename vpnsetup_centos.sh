@@ -180,7 +180,7 @@ make "-j$((NPROCS+1))" -s base && make -s install-base
 
 # Verify the install and clean up
 cd /opt/src || exiterr "Cannot enter /opt/src."
-/bin/rm -rf "/opt/src/libreswan-$SWAN_VER"
+#/bin/rm -rf "/opt/src/libreswan-$SWAN_VER"
 if ! /usr/local/sbin/ipsec --version 2>/dev/null | grep -qF "$SWAN_VER"; then
   exiterr "Libreswan $SWAN_VER failed to build."
 fi
