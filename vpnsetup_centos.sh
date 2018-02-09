@@ -132,10 +132,6 @@ check_ip "$PUBLIC_IP" || exiterr "Cannot detect this server's public IP. Edit th
 
 bigecho "Adding the EPEL repository..."
 
-yum remove epel-release
-
-yum clean all
-
 epel_url="https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(rpm -E '%{rhel}').noarch.rpm"
 yum -y install epel-release || yum -y install "$epel_url" || exiterr2
 
