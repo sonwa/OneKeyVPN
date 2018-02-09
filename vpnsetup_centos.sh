@@ -168,8 +168,9 @@ fi
 tar xzf "$swan_file" && /bin/rm -f "$swan_file"
 cd "libreswan-$SWAN_VER" || exiterr "Cannot enter Libreswan source dir."
 sed -i '/docker-targets\.mk/d' Makefile
-/bin/nl "/opt/src/libreswan-$SWAN_VER/programs/pluto/linux-copy/linux/xfrm.h" | sed '4d'
-/bin/nl "/opt/src/libreswan-$SWAN_VER/programs/pluto/linux-copy/linux/xfrm.h" | sed '4i #include <netinet/in.h>'
+sed 's/#include <linux/in6.h>/#include <netinet/in.h>/g' "/opt/src/libreswan-3.23/programs/pluto/linux-copy/linux/xfrm.h"
+#/bin/nl "/opt/src/libreswan-$SWAN_VER/programs/pluto/linux-copy/linux/xfrm.h" | sed '4d'
+#/bin/nl "/opt/src/libreswan-$SWAN_VER/programs/pluto/linux-copy/linux/xfrm.h" | sed '4i #include <netinet/in.h>'
 cat > Makefile.inc.local <<'EOF'
 WERROR_CFLAGS =
 USE_DNSSEC = false
